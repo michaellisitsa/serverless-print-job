@@ -102,6 +102,8 @@ export class HelloCdkStack extends Stack {
       ),
     });
 
+    webSocketApi.grantManageConnections(generatePdfLambda.handler);
+
     const webSocketStage = new WebSocketStage(this, "mystage", {
       webSocketApi,
       stageName: "prod",
