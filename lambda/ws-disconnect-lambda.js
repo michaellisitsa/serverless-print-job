@@ -1,7 +1,7 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
   DynamoDBDocumentClient,
-  DeleteCommand,
+  UpdateCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
 // Import the DynamoDB Document Client.
@@ -13,13 +13,15 @@ const dynamoDBDocClient = DynamoDBDocumentClient.from(dynamoDBClient);
 exports.handler = async (event) => {
   console.log("Disconnection Event:", JSON.stringify(event));
 
-  const deleteCommand = new DeleteCommand({
+  const updateCommand = new UpdateCommand({
     TableName: process.env.TABLE_NAME,
     Key: {
-      connectionId: event.requestContext.connectionId,
+      jobId: `PrintJob-${event.requestContext.connectionId}`,
     },
+    UpdateExpression: "REMOVE connectionId",
   });
-  const resp = await dynamoDBDocClient.send(deleteCommand);
+
+  const resp = await dynamoDBDocClient.send(updateCommand);
   console.log(`deleteCommand resp => ${JSON.stringify(resp)}`);
 
   return { statusCode: 200 };

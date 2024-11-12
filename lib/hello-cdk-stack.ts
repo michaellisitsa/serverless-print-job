@@ -41,19 +41,16 @@ export class HelloCdkStack extends Stack {
     // Web Socket set up is covered in this tutorial:
     // https://buraktas.com/api-gateway-websocket-api-example-aws-cdk/
 
-    const websocketConnectionsTable = new Table(this, "WebsocketConnections", {
-      partitionKey: { name: "connectionId", type: AttributeType.STRING },
+    const jobsTable = new Table(this, "JobsTable", {
+      partitionKey: { name: "jobId", type: AttributeType.STRING },
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    // We abstract the connect lambda into its own construct
-    // where we can handle all the boilerplate code
-    // and just pass in the table that both connect and disconnect lambdas will use
     const wsConnectLambda = new WebSocketConnectLambda(
       this,
       "WebSocketConnectionLambda",
       {
-        table: websocketConnectionsTable,
+        table: jobsTable,
       }
     );
 
@@ -61,7 +58,7 @@ export class HelloCdkStack extends Stack {
       this,
       "WebSocketDisconnectionLambda",
       {
-        table: websocketConnectionsTable,
+        table: jobsTable,
       }
     );
 

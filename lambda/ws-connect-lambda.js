@@ -13,7 +13,9 @@ exports.handler = async (event) => {
   const putCommand = new PutCommand({
     TableName: process.env.TABLE_NAME,
     Item: {
+      jobId: `PrintJob-${event.requestContext.connectionId}`,
       connectionId: event.requestContext.connectionId,
+      status: "pending",
     },
   });
 
