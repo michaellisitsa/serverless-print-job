@@ -11,6 +11,7 @@ import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integra
 
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { RemovalPolicy } from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
 
 export class HelloCdkStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {

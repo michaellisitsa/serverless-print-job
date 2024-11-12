@@ -9,3 +9,4 @@ cdk.out
 # Overwrite ignore on all js files which are usually compiled from ts files
 # But in this case are used for actual lambda code
 !lambda/*.js
+!generatePdf/*.js

@@ -9,6 +9,9 @@ const {
 } = require("@aws-sdk/client-apigatewaymanagementapi");
 const { TextEncoder } = require("util");
 
+// PDF dependencies
+const PDFDocument = require("pdfkit");
+
 // Import the DynamoDB Document Client.
 const dynamoDBClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 
@@ -43,6 +46,8 @@ exports.handler = async (event) => {
 
   const response = await dynamoDBDocClient.send(updateCommand);
   console.log("updateCommand response:", JSON.stringify(response));
+
+  const doc = new PDFDocument();
 
   // Send a response message back to the client via WebSocket
   const apigwManagementApi = new ApiGatewayManagementApiClient({

@@ -2,6 +2,11 @@ import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { IBucket } from "aws-cdk-lib/aws-s3";
+import {
+  NodejsFunction,
+  NodejsFunctionProps,
+} from "aws-cdk-lib/aws-lambda-nodejs";
+import path = require("path");
 
 export interface GeneratePDFLambdaProps {
   // the function for which we want to count url hits
@@ -23,10 +28,16 @@ export class GeneratePDFLambda extends Construct {
   constructor(scope: Construct, id: string, props: GeneratePDFLambdaProps) {
     super(scope, id);
 
-    this.handler = new Function(this, "ws-connect-lambda", {
+    const lambdaAppDir = path.resolve(__dirname, "../generatePdf");
+    const sourceLocationParams: NodejsFunctionProps = {
+      projectRoot: lambdaAppDir,
+      entry: path.join(lambdaAppDir, "index.js"),
+      depsLockFilePath: path.join(lambdaAppDir, "package-lock.json"),
+    };
+
+    this.handler = new NodejsFunction(this, "generatePdfBundled", {
+      ...sourceLocationParams,
       runtime: Runtime.NODEJS_18_X,
-      handler: "generate-pdf-lambda.handler",
-      code: Code.fromAsset("lambda"),
       environment: {
         TABLE_NAME: props.table.tableName,
         BUCKET_NAME: props.bucket.bucketName,
