@@ -6,6 +6,7 @@ import { WebSocketApi, WebSocketStage } from "aws-cdk-lib/aws-apigatewayv2";
 import { HitCounter } from "./hitcounter";
 import { WebSocketConnectLambda } from "./wsConnectLambda";
 import { WebSocketDisconnectLambda } from "./wsDisconnectLambda";
+import { GeneratePDFLambda } from "./generatePDFLambda";
 import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
@@ -63,6 +64,10 @@ export class HelloCdkStack extends Stack {
     );
 
     const webSocketApi = new WebSocketApi(this, "TodosWebsocketApi", {
+      // The expression that is used for routing messages to the appropriate backend integrations.
+      // see https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-develop-routes.html
+      // We are specifying the default action property below for clarity
+      routeSelectionExpression: "$request.body.action",
       connectRouteOptions: {
         integration: new WebSocketLambdaIntegration(
           "ws-connect-integration",
@@ -75,6 +80,26 @@ export class HelloCdkStack extends Stack {
           wsDisconnectLambda.handler
         ),
       },
+    });
+
+    const jobFilesBucket = new s3.Bucket(this, "JobFilesBucket");
+
+    const generatePdfLambda = new GeneratePDFLambda(this, "GeneratePdfLambda", {
+      table: jobsTable,
+      bucket: jobFilesBucket,
+    });
+
+    // 1. Add a new message to send print equation
+    // 2. On receipt of this message, find the corresponding dynamo db record
+    // 3. Put the event on the event bus.
+    // 4. On the event bus, we have a rule that triggers a lambda
+    // 5. This lambda will do some maths on the event, create a PDF, and send it to s3 bucket
+
+    webSocketApi.addRoute("generatePDF", {
+      integration: new WebSocketLambdaIntegration(
+        "generate-pdf-integration",
+        generatePdfLambda.handler
+      ),
     });
 
     const webSocketStage = new WebSocketStage(this, "mystage", {
