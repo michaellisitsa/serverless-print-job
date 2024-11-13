@@ -10,6 +10,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "pdfkit": "^0.15.1"
+    "pdf-lib": "^1.17.1"
   }
 }

@@ -4,6 +4,8 @@ import { Construct } from "constructs";
 import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
 import { WebSocketApi, WebSocketStage } from "aws-cdk-lib/aws-apigatewayv2";
 import { HitCounter } from "./hitcounter";
+
+// Lambda constructs
 import { WebSocketConnectLambda } from "./wsConnectLambda";
 import { WebSocketDisconnectLambda } from "./wsDisconnectLambda";
 import { GeneratePDFLambda } from "./generatePDFLambda";
@@ -83,7 +85,12 @@ export class HelloCdkStack extends Stack {
       },
     });
 
-    const jobFilesBucket = new s3.Bucket(this, "JobFilesBucket");
+    const jobFilesBucket = new s3.Bucket(this, "JobFilesBucket", {
+      publicReadAccess: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS,
+    });
 
     const generatePdfLambda = new GeneratePDFLambda(this, "GeneratePdfLambda", {
       table: jobsTable,

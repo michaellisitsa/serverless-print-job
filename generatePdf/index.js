@@ -1,3 +1,9 @@
+const createPdf = require("./createPdf");
+const {
+  PutObjectCommand,
+  S3Client,
+  S3ServiceException,
+} = require("@aws-sdk/client-s3");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
   DynamoDBDocumentClient,
@@ -8,9 +14,6 @@ const {
   PostToConnectionCommand,
 } = require("@aws-sdk/client-apigatewaymanagementapi");
 const { TextEncoder } = require("util");
-
-// PDF dependencies
-const PDFDocument = require("pdfkit");
 
 // Import the DynamoDB Document Client.
 const dynamoDBClient = new DynamoDBClient({ region: process.env.AWS_REGION });
@@ -47,15 +50,14 @@ exports.handler = async (event) => {
   const response = await dynamoDBDocClient.send(updateCommand);
   console.log("updateCommand response:", JSON.stringify(response));
 
-  const doc = new PDFDocument();
-
   // Send a response message back to the client via WebSocket
   const apigwManagementApi = new ApiGatewayManagementApiClient({
     endpoint: `https://${event.requestContext.domainName}/${event.requestContext.stage}`,
   });
 
   const postData = JSON.stringify({
-    message: "PDF generation started",
+    status: "started",
+    messageId: data.messageId,
     jobId: `PrintJob-${connectionId}`,
   });
 
@@ -71,6 +73,60 @@ exports.handler = async (event) => {
     console.log("Message sent to client:", postData);
   } catch (error) {
     console.error("Failed to send message to client:", error);
+  }
+
+  // Generate the PDF
+  try {
+    const pdfBytes = await createPdf(data.value);
+
+    const client = new S3Client({});
+    const command = new PutObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key: `${connectionId}:${data.messageId}.pdf`,
+      Body: Buffer.from(pdfBytes),
+      ContentType: "application/pdf",
+    });
+    // Send pdf to s3 bucket
+    const response = await client.send(command);
+    const successCommand = new PostToConnectionCommand({
+      ConnectionId: connectionId, // Use the provided connection ID
+      Data: textEncoder.encode(
+        JSON.stringify({
+          status: "success",
+          jobId: `PrintJob-${connectionId}`,
+          pdfUrl: `https://${process.env.BUCKET_NAME}.s3.ap-southeast-2.amazonaws.com/${connectionId}:${data.messageId}.pdf`,
+          messageId: data.messageId,
+        })
+      ), // expects uint8array
+    });
+
+    try {
+      await apigwManagementApi.send(successCommand);
+      console.log("Message sent to client");
+    } catch (error) {
+      console.error("Failed to send success message to client:", error);
+    }
+  } catch (error) {
+    console.error("Failed to create PDF:", error);
+
+    const failedCommand = new PostToConnectionCommand({
+      ConnectionId: connectionId, // Use the provided connection ID
+      Data: textEncoder.encode(
+        JSON.stringify({
+          status: "errored",
+          error: error.message,
+          jobId: `PrintJob-${connectionId}`,
+          messageId: data.messageId,
+        })
+      ), // expects uint8array
+    });
+
+    try {
+      await apigwManagementApi.send(failedCommand);
+      console.log("Failed message sent to client");
+    } catch (error) {
+      console.error("Failed to send error message to client:", error);
+    }
   }
 
   return { statusCode: 200 };
