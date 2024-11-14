@@ -1,7 +1,7 @@
 import { CfnOutput, Stack, StackProps } from "aws-cdk-lib";
 import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
-import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import { Cors, LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
 import { WebSocketApi, WebSocketStage } from "aws-cdk-lib/aws-apigatewayv2";
 import { HitCounter } from "./hitcounter";
 
@@ -37,6 +37,18 @@ export class HelloCdkStack extends Stack {
     // defines an API Gateway REST API resource backed by our "hello" function.
     const gateway = new LambdaRestApi(this, "Endpoint", {
       handler: helloWithCounter.handler,
+      defaultCorsPreflightOptions: {
+        allowMethods: [
+          "GET",
+          "HEAD",
+          "POST",
+          "OPTIONS",
+          "PUT",
+          "DELETE",
+          "PATCH",
+        ],
+        allowOrigins: Cors.ALL_ORIGINS,
+      },
     });
 
     // WEB SOCKET API GATEWAY
