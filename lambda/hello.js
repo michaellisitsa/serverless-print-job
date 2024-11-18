@@ -18,7 +18,13 @@ exports.handler = async function (event) {
 
   return {
     statusCode: 200,
-    headers: { "Content-Type": "text/plain" },
+    headers: {
+      "Content-Type": "text/plain",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Origin": "https://lisitsa.dev",
+      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+    },
     body: randomMessage,
   };
 };
