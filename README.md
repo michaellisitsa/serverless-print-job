@@ -1,14 +1,26 @@
-# Welcome to your CDK TypeScript project
+# Serverless Print API
 
-This is a blank project for CDK development with TypeScript.
+Check it out on:
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+[**https://lisitsa.dev**](https://lisitsa.dev) 💻🌐👨‍💻
 
-## Useful commands
+Front-end Code: [michaellisitsa/personal-website-aws](https://github.com/michaellisitsa/personal-website-aws)
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+- [x] Websocket API Gateway for generating motivational posters
+- [x] Rest API Gateway for getting random motivational phrases
+- [x] S3 storage of generated pdfs
+
+## How to deploy
+
+- Modify `bin/serverless-print-cdk` for your account details
+- `cdk deploy`
+
+## Testing
+
+The generatePdf lambda can be tested
+
+```js
+cd generatePdf
+npm install
+npm run invoke "YOUR TEXT HERE"
+```
