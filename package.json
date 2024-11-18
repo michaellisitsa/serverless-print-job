@@ -1,8 +1,8 @@
 {
-  "name": "hello-cdk",
+  "name": "serverless-print-cdk",
   "version": "0.1.0",
   "bin": {
-    "hello-cdk": "bin/hello-cdk.js"
+    "serverless-print-cdk": "bin/serverless-print-cdk.js"
   },
   "scripts": {
     "build": "tsc",

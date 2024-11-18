@@ -15,28 +15,32 @@ import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { RemovalPolicy } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 
-export class HelloCdkStack extends Stack {
+export class ServerlessPrintCdkStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     // REST API GATEWAY
-    // The following HitCounter and hello lambda
+    // The following HitCounter and random-phrase lambda
     // demonstrate a pattern where the HitCounter lambda is an orchestrator lambda
-    // that talks to the DB and also invokes and receives a response from the hello lambda
-    const hello = new Function(this, "HelloHandler", {
+    // that talks to the DB and also invokes and receives a response from the random phrase lambda
+    const randomPhraseLambda = new Function(this, "RandomPhrase", {
       runtime: Runtime.NODEJS_18_X, // execution environment
       code: Code.fromAsset("lambda"), // code loaded from "lambda" directory
-      handler: "hello.handler", // file is "hello", function is "handler"
+      handler: "random-phrase.handler",
     });
 
     // Lambda invokes another lambda. Similar to ClearCalcs pattern of having an orchestrator lambda or Rails Job
-    const helloWithCounter = new HitCounter(this, "HelloHitCounter", {
-      downstream: hello,
-    });
+    const randomPhraseWithCounter = new HitCounter(
+      this,
+      "RandomPhraseHitCounter",
+      {
+        downstream: randomPhraseLambda,
+      }
+    );
 
-    // defines an API Gateway REST API resource backed by our "hello" function.
+    // defines an API Gateway REST API resource backed by our "Random Phrase" function.
     const gateway = new LambdaRestApi(this, "Endpoint", {
-      handler: helloWithCounter.handler,
+      handler: randomPhraseWithCounter.handler,
       defaultCorsPreflightOptions: {
         allowMethods: [
           "GET",
@@ -78,7 +82,7 @@ export class HelloCdkStack extends Stack {
       }
     );
 
-    const webSocketApi = new WebSocketApi(this, "TodosWebsocketApi", {
+    const webSocketApi = new WebSocketApi(this, "PrintWebsocketApi", {
       // The expression that is used for routing messages to the appropriate backend integrations.
       // see https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-develop-routes.html
       // We are specifying the default action property below for clarity
