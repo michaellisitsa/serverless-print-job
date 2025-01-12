@@ -11,7 +11,6 @@ import { WebSocketDisconnectLambda } from "./wsDisconnectLambda";
 import { GeneratePDFLambda } from "./generatePDFLambda";
 import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
-import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { RemovalPolicy } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 
@@ -61,25 +60,16 @@ export class ServerlessPrintCdkStack extends Stack {
     // Web Socket set up is covered in this tutorial:
     // https://buraktas.com/api-gateway-websocket-api-example-aws-cdk/
 
-    const jobsTable = new Table(this, "JobsTable", {
-      partitionKey: { name: "jobId", type: AttributeType.STRING },
-      removalPolicy: RemovalPolicy.DESTROY,
-    });
-
     const wsConnectLambda = new WebSocketConnectLambda(
       this,
       "WebSocketConnectionLambda",
-      {
-        table: jobsTable,
-      }
+      {}
     );
 
     const wsDisconnectLambda = new WebSocketDisconnectLambda(
       this,
       "WebSocketDisconnectionLambda",
-      {
-        table: jobsTable,
-      }
+      {}
     );
 
     const webSocketApi = new WebSocketApi(this, "PrintWebsocketApi", {
@@ -109,12 +99,10 @@ export class ServerlessPrintCdkStack extends Stack {
     });
 
     const generatePdfLambda = new GeneratePDFLambda(this, "GeneratePdfLambda", {
-      table: jobsTable,
       bucket: jobFilesBucket,
     });
 
     // 1. Add a new message to send print equation
-    // 2. On receipt of this message, find the corresponding dynamo db record
     // 3. Put the event on the event bus.
     // 4. On the event bus, we have a rule that triggers a lambda
     // 5. This lambda will do some maths on the event, create a PDF, and send it to s3 bucket
